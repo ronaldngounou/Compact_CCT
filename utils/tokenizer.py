@@ -37,11 +37,13 @@ class Tokenizer(nn.Module):
         self.flattener = nn.Flatten(1, -1) 
         self.apply(self.init_weight)
 
-    def sequence_length(self, n_channels=3, length = 1000):
+    def sequence_length(self, n_channels=1, length = 1000):
         return self.forward(torch.zeros((1, n_channels, length))).shape[1]
 
     def forward(self, x):
-        return self.flattener(self.conv_layers(x)).transpose(-2, -1)
+        x = self.conv_layers(x)
+        x = self.flatterner(x)
+        return x
 
     @staticmethod
     def init_weight(m):
