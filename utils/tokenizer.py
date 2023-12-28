@@ -34,19 +34,21 @@ class Tokenizer(nn.Module):
                 for i in range(n_conv_layers)
             ])
 
-        self.flattener = nn.Flatten(2, 3)
+        self.flattener = nn.Flatten(1, -1) 
         self.apply(self.init_weight)
 
-    def sequence_length(self, n_channels=3, height=224, width=224):
-        return self.forward(torch.zeros((1, n_channels, height, width))).shape[1]
+    def sequence_length(self, n_channels=3, length = 1000):
+        return self.forward(torch.zeros((1, n_channels, length))).shape[1]
 
     def forward(self, x):
         return self.flattener(self.conv_layers(x)).transpose(-2, -1)
 
     @staticmethod
     def init_weight(m):
-        if isinstance(m, nn.Conv2d):
+        if isinstance(m, nn.Conv1d):
             nn.init.kaiming_normal_(m.weight)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
 
 
 class TextTokenizer(nn.Module):
@@ -68,16 +70,16 @@ class TextTokenizer(nn.Module):
                       padding=(padding, 0), bias=False),
             nn.Identity() if activation is None else activation(),
             nn.MaxPool1d(
-                kernel_size=(pooling_kernel_size, 1),
-                stride=(pooling_stride, 1),
-                padding=(pooling_padding, 0)
+                kernel_size=pooling_kernel_size,
+                stride=pooling_stride,
+                padding=pooling_padding,
             ) if max_pool else nn.Identity()
         )
 
         self.apply(self.init_weight)
 
-    def seq_len(self, seq_len=32, embed_dim=300):
-        return self.forward(torch.zeros((1, seq_len, embed_dim)))[0].shape[1]
+    def seq_len(self, seq_len=32):
+        return self.forward(torch.zeros((1, seq_len)))[0].shape[1]
 
     def forward_mask(self, mask):
         new_mask = mask.unsqueeze(1).float()
@@ -87,11 +89,11 @@ class TextTokenizer(nn.Module):
             dtype=torch.float)
         new_mask = F.conv1d(
             new_mask, cnn_weight, None,
-            self.conv_layers[0].stride[0], self.conv_layers[0].padding[0], 1, 1)
+            self.conv_layers[0].stride[0], self.conv_layers[0].padding[0], dilation=1, groups=1)
         if self.max_pool:
             new_mask = F.max_pool1d(
                 new_mask, self.conv_layers[2].kernel_size[0],
-                self.conv_layers[2].stride[0], self.conv_layers[2].padding[0], 1, False, False)
+                stide = self.conv_layers[2].stride[0], padding = self.conv_layers[2].padding[0], dilation=1, ceil_mode=False)
         new_mask = new_mask.squeeze(1)
         new_mask = (new_mask > 0)
         return new_mask
