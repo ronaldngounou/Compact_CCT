@@ -137,7 +137,7 @@ class TransformerClassifier(Module):
                  num_layers=12,
                  num_heads=12,
                  mlp_ratio=4.0,
-                 num_classes=1000,
+                 num_classes=1,
                  dropout=0.1,
                  attention_dropout=0.1,
                  stochastic_depth=0.1,
