@@ -9,12 +9,12 @@ class Attention(Module):
     Obtained from timm: github.com:rwightman/pytorch-image-models
     """
 
-    def __init__(self, dim, num_heads=8, attention_dropout=0.1, projection_dropout=0.1):
+    def __init__(self, dim, num_heads=5, attention_dropout=0.1, projection_dropout=0.1): 
         super().__init__()
         self.num_heads = num_heads
-        head_dim = dim // self.num_heads
+        head_dim = max(dim // self.num_heads, 1) #changed num_heads from 8 to 5 to avoid the integer division and have a 0
         self.scale = head_dim ** -0.5
-
+        self. b = 0.5
         self.qkv = Linear(dim, dim * 3, bias=False)
         self.attn_drop = Dropout(attention_dropout)
         self.proj = Linear(dim, dim)
@@ -22,7 +22,8 @@ class Attention(Module):
 
     def forward(self, x):
         B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        #qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, min(5, C // self.num_heads)).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
@@ -36,11 +37,12 @@ class Attention(Module):
 
 
 class MaskedAttention(Module):
-    def __init__(self, dim, num_heads=8, attention_dropout=0.1, projection_dropout=0.1):
+    def __init__(self, dim, num_heads=5, attention_dropout=0.1, projection_dropout=0.1):
         super().__init__()
         self.num_heads = num_heads
-        head_dim = dim // self.num_heads
+        head_dim = max(dim // self.num_heads, 1)
         self.scale = head_dim ** -0.5
+        self.scale = 0.5 
 
         self.qkv = Linear(dim, dim * 3, bias=False)
         self.attn_drop = Dropout(attention_dropout)
@@ -49,7 +51,8 @@ class MaskedAttention(Module):
 
     def forward(self, x, mask=None):
         B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        #qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, min(5, C // self.num_heads)).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
@@ -133,7 +136,7 @@ class MaskedTransformerEncoderLayer(Module):
 class TransformerClassifier(Module):
     def __init__(self,
                  seq_pool=True,
-                 embedding_dim=768,
+                 embedding_dim=5,
                  num_layers=12,
                  num_heads=12,
                  mlp_ratio=4.0,
@@ -234,11 +237,11 @@ class TransformerClassifier(Module):
 class MaskedTransformerClassifier(Module):
     def __init__(self,
                  seq_pool=True,
-                 embedding_dim=768,
+                 embedding_dim=5,
                  num_layers=12,
                  num_heads=12,
                  mlp_ratio=4.0,
-                 num_classes=1000,
+                 num_classes=1,
                  dropout=0.1,
                  attention_dropout=0.1,
                  stochastic_depth=0.1,
