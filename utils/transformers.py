@@ -12,9 +12,8 @@ class Attention(Module):
     def __init__(self, dim, num_heads=5, attention_dropout=0.1, projection_dropout=0.1): 
         super().__init__()
         self.num_heads = num_heads
-        head_dim = max(dim // self.num_heads, 1) #changed num_heads from 8 to 5 to avoid the integer division and have a 0
+        head_dim = dim // self.num_heads #changed num_heads from 8 to 5 to avoid the integer division and have a 0
         self.scale = head_dim ** -0.5
-        self. b = 0.5
         self.qkv = Linear(dim, dim * 3, bias=False)
         self.attn_drop = Dropout(attention_dropout)
         self.proj = Linear(dim, dim)
@@ -40,7 +39,7 @@ class MaskedAttention(Module):
     def __init__(self, dim, num_heads=5, attention_dropout=0.1, projection_dropout=0.1):
         super().__init__()
         self.num_heads = num_heads
-        head_dim = max(dim // self.num_heads, 1)
+        head_dim = dim // self.num_heads
         self.scale = head_dim ** -0.5
         self.scale = 0.5 
 
@@ -237,7 +236,7 @@ class TransformerClassifier(Module):
 class MaskedTransformerClassifier(Module):
     def __init__(self,
                  seq_pool=True,
-                 embedding_dim=5,
+                 embedding_dim=20,
                  num_layers=12,
                  num_heads=12,
                  mlp_ratio=4.0,
