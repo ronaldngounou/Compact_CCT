@@ -21,8 +21,8 @@ class Attention(Module):
 
     def forward(self, x):
         B, N, C = x.shape
-        #qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, min(5, C // self.num_heads)).permute(2, 0, 3, 1, 4)
+        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        #qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, min(5, C // self.num_heads)).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
@@ -50,8 +50,8 @@ class MaskedAttention(Module):
 
     def forward(self, x, mask=None):
         B, N, C = x.shape
-        #qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, min(5, C // self.num_heads)).permute(2, 0, 3, 1, 4)
+        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        #qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, min(5, C // self.num_heads)).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
@@ -236,7 +236,7 @@ class TransformerClassifier(Module):
 class MaskedTransformerClassifier(Module):
     def __init__(self,
                  seq_pool=True,
-                 embedding_dim=20,
+                 embedding_dim=5,
                  num_layers=12,
                  num_heads=12,
                  mlp_ratio=4.0,
